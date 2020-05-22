@@ -45,13 +45,13 @@ typedef enum {
  */
 static int prompt_password(unsigned char *password, size_t max_length)
 {
-    cout << "Enter master password: ";
+    std::cout << "Enter master password: ";
 
     char pass_buf[MAX_STORE_PASSWORD_SIZE + 2];
     const char *input = fgets(pass_buf, sizeof(pass_buf), stdin);
 
     if (input == NULL) {
-        cout << "Invalid input." << endl;
+        std::cout << "Invalid input." << std::endl;
         return -1;
     }
 
@@ -72,47 +72,47 @@ static int prompt_password(unsigned char *password, size_t max_length)
 static int new_password_prompt(Pass_Store &p, unsigned char *password, size_t max_length)
 {
     while (true) {
-        cout << "Enter new master password: ";
+        std::cout << "Enter new master password: ";
 
         // buffers are oversized by one byte for proper error reporting due to fgets weirdness
         char pass1[MAX_STORE_PASSWORD_SIZE + 3];
         char pass2[MAX_STORE_PASSWORD_SIZE + 3];
 
         const char *input1 = fgets(pass1, sizeof(pass1), stdin);
-        cout << endl;
+        std::cout << std::endl;
 
         if (p.check_lock()) {
             return PASS_STORE_LOCKED;
         }
 
         if (input1 == NULL) {
-            cout << "Invalid input" << endl;
+            std::cout << "Invalid input" << std::endl;
             continue;
         }
 
         size_t pass_length = strlen(pass1);
 
         if (pass_length < MIN_MASTER_PASSWORD_SIZE || pass_length > max_length) {
-            cout << "Password must be between " << MIN_MASTER_PASSWORD_SIZE  << " and " << (max_length - 1) << " characters long" << endl;
+            std::cout << "Password must be between " << MIN_MASTER_PASSWORD_SIZE  << " and " << (max_length - 1) << " characters long" << std::endl;
             continue;
         }
 
-        cout << "Enter password again: ";
+        std::cout << "Enter password again: ";
 
         const char *input2 = fgets(pass2, sizeof(pass2), stdin);
-        cout << endl;
+        std::cout << std::endl;
 
         if (p.check_lock()) {
             return PASS_STORE_LOCKED;
         }
 
         if (input2 == NULL) {
-            cout << "Invalid input" << endl;
+            std::cout << "Invalid input" << std::endl;
             continue;
         }
 
         if (strcmp(pass1, pass2) != 0) {
-            cout << "New passwords don't match" << endl;
+            std::cout << "New passwords don't match" << std::endl;
             continue;
         }
 
@@ -144,10 +144,10 @@ static int init_new_password(Pass_Store &p, unsigned char *password, size_t max_
         return ret;
     }
 
-    cout << "Generating new encryption key. This can take a while" << endl;
+    std::cout << "Generating new encryption key. This can take a while" << std::endl;
 
     if (init_pass_hash(password, strlen((char *) password)) != 0) {
-        cerr << "init_pass_hash() failed." << endl;
+        std::cerr << "init_pass_hash() failed." << std::endl;
         return -1;
     }
 
@@ -167,21 +167,21 @@ static int change_password_prompt(Pass_Store &p)
     unsigned char hash[CRYPTO_HASH_SIZE];
     p.get_password_hash(hash);
 
-    cout << "Changing master password. Enter q to go back." << endl;
+    std::cout << "Changing master password. Enter q to go back." << std::endl;
 
     while (true) {
-        cout << "Enter old password: ";
+        std::cout << "Enter old password: ";
 
         char old_pass[MAX_STORE_PASSWORD_SIZE + 2];
         const char *input1 = fgets(old_pass, sizeof(old_pass), stdin);
-        cout << endl;
+        std::cout << std::endl;
 
         if (p.check_lock()) {
             return PASS_STORE_LOCKED;
         }
 
         if (input1 == NULL) {
-            cout << "Invalid input" << endl;
+            std::cout << "Invalid input" << std::endl;
             continue;
         }
 
@@ -189,12 +189,12 @@ static int change_password_prompt(Pass_Store &p)
             return -1;
         }
 
-        cout << "Validating password..." << endl;
+        std::cout << "Validating password..." << std::endl;
 
         size_t pass_length = strlen(old_pass);
 
         if (!crypto_verify_pass_hash(hash, (unsigned char *) old_pass, pass_length)) {
-            cout << "Invalid password" << endl;
+            std::cout << "Invalid password" << std::endl;
             continue;
         }
 
@@ -205,7 +205,7 @@ static int change_password_prompt(Pass_Store &p)
         return PASS_STORE_LOCKED;
     }
 
-    cout << "Generating new encryption key..." << endl;
+    std::cout << "Generating new encryption key..." << std::endl;
 
     int ret = update_crypto(p, new_password, strlen((char *) new_password));
 
@@ -216,11 +216,11 @@ static int change_password_prompt(Pass_Store &p)
     }
 
     if (ret < 0) {
-        cerr << "Failed to update password (error code: " << to_string(ret) << ")" << endl;
+        std::cerr << "Failed to update password (error code: " << std::to_string(ret) << ")" << std::endl;
         return -1;
     }
 
-    cout << "Successfully updated password" << endl;
+    std::cout << "Successfully updated password" << std::endl;
 
     return 0;
 }
@@ -236,39 +236,39 @@ static int new_password(Pass_Store &p)
 
 static int add(Pass_Store &p)
 {
-    string key, password;
+    std::string key, password;
 
-    cout << "Enter key to add: ";
-    getline(cin, key);
+    std::cout << "Enter key to add: ";
+    getline(std::cin, key);
 
     if (p.check_lock()) {
         return PASS_STORE_LOCKED;
     }
 
     if (key.length() > MAX_STORE_KEY_SIZE) {
-        cout << "Key is too long" << endl;
+        std::cout << "Key is too long" << std::endl;
         return -1;
     }
 
     if (key.length() == 0) {
-        cout << "Invalid key" << endl;
+        std::cout << "Invalid key" << std::endl;
         return -1;
     }
 
     if (!string_printable(key)) {
-        cout << "Key may only contain printable ASCII characters" << endl;
+        std::cout << "Key may only contain printable ASCII characters" << std::endl;
         return -1;
     }
 
-    cout << "Enter password (leave empty for a random password): ";
-    getline(cin, password);
+    std::cout << "Enter password (leave empty for a random password): ";
+    getline(std::cin, password);
 
     if (p.check_lock()) {
         return PASS_STORE_LOCKED;
     }
 
     if (password.length() > MAX_STORE_PASSWORD_SIZE) {
-        cout << "Password length must not exceed " << to_string(MAX_STORE_PASSWORD_SIZE) << " characters" << endl;
+        std::cout << "Password length must not exceed " << std::to_string(MAX_STORE_PASSWORD_SIZE) << " characters" << std::endl;
         return -1;
     }
 
@@ -276,11 +276,11 @@ static int add(Pass_Store &p)
         password = random_password(16U);
 
         if (password.empty()) {
-            cout << "Failed to generate random password" << endl;
+            std::cout << "Failed to generate random password" << std::endl;
             return -1;
         }
     } else if (!string_printable(password)) {
-        cout << "Password may only contain printable ASCII characters" << endl;
+        std::cout << "Password may only contain printable ASCII characters" << std::endl;
         return -1;
     }
 
@@ -292,9 +292,9 @@ static int add(Pass_Store &p)
 
     if (exists > 0) {
         while (true) {
-            string s;
-            cout << "Key \"" << key << "\" already exists. Overwrite? Y/n ";
-            getline(cin, s);
+            std::string s;
+            std::cout << "Key \"" << key << "\" already exists. Overwrite? Y/n ";
+            getline(std::cin, s);
 
             if (s == "Y" || s == "y") {
                 break;
@@ -305,7 +305,7 @@ static int add(Pass_Store &p)
     }
 
     if (p.insert(key, password) != 0) {
-        cout << "Failed to add entry" << endl;
+        std::cout << "Failed to add entry" << std::endl;
         return -1;
     }
 
@@ -313,24 +313,24 @@ static int add(Pass_Store &p)
 
     switch (ret) {
         case 0: {
-            cout << "Added key " << key << " with password " << password << endl;
+            std::cout << "Added key " << key << " with password " << password << std::endl;
             return 0;
         }
         case -1: {
-            cerr << "Failed to save password store: Failed to open pass store file" << endl;
+            std::cerr << "Failed to save password store: Failed to open pass store file" << std::endl;
             return -1;
         }
         case -2: {
-            cerr << "Failed to save password store: Encryption error" << endl;
+            std::cerr << "Failed to save password store: Encryption error" << std::endl;
             return -1;
 
         }
         case -3: {
-            cerr << "Failed to save password store: File save error" << endl;
+            std::cerr << "Failed to save password store: File save error" << std::endl;
             return -1;
         }
         default: {
-            cerr << "Failed to save password store: Unknown error" << endl;
+            std::cerr << "Failed to save password store: Unknown error" << std::endl;
             return -1;
         }
     }
@@ -340,18 +340,18 @@ static int add(Pass_Store &p)
 
 static int remove(Pass_Store &p)
 {
-    string key;
-    cout << "Enter key to remove: ";
-    getline(cin, key);
+    std::string key;
+    std::cout << "Enter key to remove: ";
+    getline(std::cin, key);
 
     if (p.check_lock()) {
         return PASS_STORE_LOCKED;
     }
 
     while (true) {
-        cout << "Are you sure you want to remove the key \"" << key << "\" ? Y/n ";
-        string s;
-        getline(cin, s);
+        std::cout << "Are you sure you want to remove the key \"" << key << "\" ? Y/n ";
+        std::string s;
+        getline(std::cin, s);
 
         if (p.check_lock()) {
             return PASS_STORE_LOCKED;
@@ -363,7 +363,7 @@ static int remove(Pass_Store &p)
             return 0;
         }
 
-        cout << "Invalid option" << endl;
+        std::cout << "Invalid option" << std::endl;
     }
 
     int removed = p.remove(key);
@@ -373,16 +373,16 @@ static int remove(Pass_Store &p)
     }
 
     if (removed != 0) {
-        cout << "Key not found" << endl;
+        std::cout << "Key not found" << std::endl;
         return -1;
     }
 
-    cout << "Removed \"" << key << "\" from pass store" << endl;
+    std::cout << "Removed \"" << key << "\" from pass store" << std::endl;
 
     int ret = save_password_store(p);
 
     if (ret != 0) {
-        cerr << "Failed to save password store (error code: " << to_string(ret) << ")" << endl;
+        std::cerr << "Failed to save password store (error code: " << std::to_string(ret) << ")" << std::endl;
         return -1;
     }
 
@@ -391,10 +391,10 @@ static int remove(Pass_Store &p)
 
 static int fetch(Pass_Store &p)
 {
-    cout << "Enter key: ";
+    std::cout << "Enter key: ";
 
-    string key;
-    getline(cin, key);
+    std::string key;
+    getline(std::cin, key);
 
     if (p.check_lock()) {
         return PASS_STORE_LOCKED;
@@ -404,7 +404,7 @@ static int fetch(Pass_Store &p)
         return -1;
     }
 
-    vector<tuple<string, const char *>> result;
+    std::vector<std::tuple<std::string, const char *>> result;
     int matches = p.get_matches(key, result, false);
 
     if (matches == PASS_STORE_LOCKED) {
@@ -412,14 +412,14 @@ static int fetch(Pass_Store &p)
     }
 
     if (result.empty()) {
-        cout << "Key not found" << endl;
+        std::cout << "Key not found" << std::endl;
         return -1;
     }
 
     p.s_lock();
 
     for (const auto &item: result) {
-        cout << get<0>(item) << ": " << get<1>(item) << endl;
+        std::cout << std::get<0>(item) << ": " << std::get<1>(item) << std::endl;
     }
 
     p.s_unlock();
@@ -427,9 +427,9 @@ static int fetch(Pass_Store &p)
     return 0;
 }
 
-static int list(Pass_Store &p)
+static int list_entries(Pass_Store &p)
 {
-    vector<tuple<string, const char *>> result;
+    std::vector<std::tuple<std::string, const char *>> result;
     int matches = p.get_matches("", result, false);
 
     if (matches == PASS_STORE_LOCKED) {
@@ -437,7 +437,7 @@ static int list(Pass_Store &p)
     }
 
     for (const auto &item: result) {
-        cout << get<0>(item) << endl;
+        std::cout << std::get<0>(item) << std::endl;
     }
 
     return 0;
@@ -445,12 +445,12 @@ static int list(Pass_Store &p)
 
 static int generate(Pass_Store &p)
 {
-    string input;
+    std::string input;
     int size = 0;
 
     while (true) {
-        cout << "Enter password length: ";
-        getline(cin, input);
+        std::cout << "Enter password length: ";
+        getline(std::cin, input);
 
         if (p.check_lock()) {
             return PASS_STORE_LOCKED;
@@ -458,8 +458,8 @@ static int generate(Pass_Store &p)
 
         try {
             size = stoi(input);
-        } catch (const exception &) {
-            cout << "Invalid input" << endl;
+        } catch (const std::exception &) {
+            std::cout << "Invalid input" << std::endl;
             continue;
         }
 
@@ -467,35 +467,35 @@ static int generate(Pass_Store &p)
             break;
         }
 
-        cout << "Password must be between " << to_string(NUM_RAND_PASS_MIN_CHARS) << " and " << to_string(NUM_RAND_PASS_MAX_CHARS) << " characters in length" << endl;
+        std::cout << "Password must be between " << std::to_string(NUM_RAND_PASS_MIN_CHARS) << " and " << std::to_string(NUM_RAND_PASS_MAX_CHARS) << " characters in length" << std::endl;
     }
 
-    string pass = random_password(size);
+    std::string pass = random_password(size);
 
     if (pass.empty()) {
-        cout << "Failed to generate password" << endl;
+        std::cout << "Failed to generate password" << std::endl;
         return -1;
     }
 
-    cout << pass << endl;
+    std::cout << pass << std::endl;
 
     return 0;
 }
 
 static bool unlock_prompt(Pass_Store &p)
 {
-    cout << "Enter master password: ";
+    std::cout << "Enter master password: ";
 
     unsigned char pass[MAX_STORE_PASSWORD_SIZE + 2];
     const char *input = fgets((char *) pass, sizeof(pass), stdin);
-    cout << endl;
+    std::cout << std::endl;
 
     if (input == NULL) {
-        cout << "Invalid input" << endl;
+        std::cout << "Invalid input" << std::endl;
         return false;
     }
 
-    cout << "Decrypting pass store file..." << endl;
+    std::cout << "Decrypting pass store file..." << std::endl;
 
     int ret = load_password_store(p, pass, strlen((char *) pass));
 
@@ -507,23 +507,23 @@ static bool unlock_prompt(Pass_Store &p)
 
     switch (ret) {
         case -1: {
-            cerr << "Pass store file cannot be read" << endl;
+            std::cerr << "Pass store file cannot be read" << std::endl;
             break;
         }
         case -2: {
-            cout << "Invalid password" << endl;
+            std::cout << "Invalid password" << std::endl;
             break;
         }
         case -3: {
-            cerr << "Failed to decrypt pass store file" << endl;
+            std::cerr << "Failed to decrypt pass store file" << std::endl;
             break;
         }
         case -4: {
-            cerr << "Pass store file has bad format" << endl;
+            std::cerr << "Pass store file has bad format" << std::endl;
             break;
         }
         default: {
-            cerr << "load_password_store() returned unknown error: " << to_string(ret) << endl;
+            std::cerr << "load_password_store() returned unknown error: " << std::to_string(ret) << std::endl;
             break;
         }
     }
@@ -543,15 +543,15 @@ static void lock_check(Pass_Store &p)
 
 static void print_menu(void)
 {
-    cout << "Menu:" << endl;
-    cout << "[" << to_string(OPT_ADD)        << "] Add entry" << endl;
-    cout << "[" << to_string(OPT_REMOVE)     << "] Remove entry" << endl;
-    cout << "[" << to_string(OPT_FETCH)      << "] Fetch entry" << endl;
-    cout << "[" << to_string(OPT_LIST)       << "] List all entries" << endl;
-    cout << "[" << to_string(OPT_GENERATE)   << "] Generate password" << endl;
-    cout << "[" << to_string(OPT_PASSWORD)   << "] Change master password" << endl;
-    cout << "[" << to_string(OPT_PRINT)      << "] Print menu" << endl;
-    cout << "[" << to_string(OPT_EXIT)       << "] Exit" << endl;
+    std::cout << "Menu:" << std::endl;
+    std::cout << "[" << std::to_string(OPT_ADD)        << "] Add entry" << std::endl;
+    std::cout << "[" << std::to_string(OPT_REMOVE)     << "] Remove entry" << std::endl;
+    std::cout << "[" << std::to_string(OPT_FETCH)      << "] Fetch entry" << std::endl;
+    std::cout << "[" << std::to_string(OPT_LIST)       << "] List all entries" << std::endl;
+    std::cout << "[" << std::to_string(OPT_GENERATE)   << "] Generate password" << std::endl;
+    std::cout << "[" << std::to_string(OPT_PASSWORD)   << "] Change master password" << std::endl;
+    std::cout << "[" << std::to_string(OPT_PRINT)      << "] Print menu" << std::endl;
+    std::cout << "[" << std::to_string(OPT_EXIT)       << "] Exit" << std::endl;
 }
 
 /*
@@ -587,7 +587,7 @@ static int execute(const int option, Pass_Store &p)
             break;
         }
         case OPT_LIST: {
-            ret = list(p);
+            ret = list_entries(p);
             break;
         }
         case OPT_GENERATE: {
@@ -603,7 +603,7 @@ static int execute(const int option, Pass_Store &p)
             break;
         }
         default: {
-            cout << "Invalid command. Enter " << to_string(OPT_PRINT) << " to print menu." << endl;
+            std::cout << "Invalid command. Enter " << std::to_string(OPT_PRINT) << " to print menu." << std::endl;
             break;
         }
     }
@@ -613,13 +613,13 @@ static int execute(const int option, Pass_Store &p)
 
 static int command_prompt(void)
 {
-    cout << "> ";
-    string prompt;
-    getline(cin, prompt);
+    std::cout << "> ";
+    std::string prompt;
+    getline(std::cin, prompt);
 
     try {
         return stoi(prompt);
-    } catch (const exception &e) {
+    } catch (const std::exception &e) {
         return -1;
     }
 }
@@ -639,7 +639,7 @@ int cli_new_pass_store(Pass_Store &p)
     unsigned char password[MAX_STORE_PASSWORD_SIZE + 2];
 
     if (first_time_run()) {
-        cout << "Creating a new profile. " << endl;
+        std::cout << "Creating a new profile. " << std::endl;
 
         if (init_new_password(p, password, sizeof(password) - 1) != 0) {
             return -1;
@@ -649,21 +649,21 @@ int cli_new_pass_store(Pass_Store &p)
         int pw_ret = prompt_password(password, sizeof(password) - 1);
         terminal_echo(true);
 
-        cout << endl;
+        std::cout << std::endl;
 
         if (pw_ret != 0) {
             return -1;
         }
     }
 
-    cout << "Decrypting pass store file..." << endl;
+    std::cout << "Decrypting pass store file..." << std::endl;
 
     int ret = load_password_store(p, password, strlen((char *) password));
 
     crypto_memwipe(password, sizeof(password));
 
     if (ret >= 0) {
-        cout << "Loaded " << to_string(ret) << " entries" << endl;
+        std::cout << "Loaded " << std::to_string(ret) << " entries" << std::endl;
         return 0;
     }
 

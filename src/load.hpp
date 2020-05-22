@@ -41,7 +41,7 @@
  *
  * Set `temp` to true for temp file path instead.
  */
-const string get_store_path(bool temp);
+const std::string get_store_path(bool temp);
 
 /*
  * Attempts to validate password, decrypt password store, and load it into `p`.

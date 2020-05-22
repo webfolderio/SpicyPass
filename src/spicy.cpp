@@ -20,6 +20,10 @@
  *
  */
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 #include <thread>
 #include <chrono>
 
@@ -30,6 +34,7 @@
 #include "crypto.hpp"
 #include "cli.hpp"
 #include "gui.hpp"
+
 
 using namespace std;
 
@@ -84,13 +89,29 @@ void set_file_permissions(void)
 #endif
 }
 
+#ifdef _WIN32
+#ifdef GUI_SUPPORT
+int __stdcall WinMain(HINSTANCE   hInstance,
+	HINSTANCE   hPrevInstance,
+	LPTSTR      lpCmdLine,
+	int         nCmdShow)
+{
+	char** argv = __argv;
+	int argc = __argc;
+#else
 int main(int argc, char **argv)
 {
+#endif
+#else
+int main(int argc, char **argv)
+{
+#endif
+
     print_version(argv[0]);
 
 #if GUI_SUPPORT
     bool have_gui = gui_enabled(argc, argv);
-    GUI ui;
+	GUI ui;
 #else
     if (argc > 1) {
         cerr << "Warning: Unrecognized options" << endl;

@@ -40,11 +40,11 @@ static bool valid_format_version(unsigned char format_version)
  *
  * Set `temp` to true for temp file path instead.
  */
-const string get_store_path(bool temp)
+const std::string get_store_path(bool temp)
 {
 #if defined(_WIN32)
-    string homedir = getenv("HOMEPATH");
-    string path = homedir + "\\" + DEFAULT_FILENAME;
+    std::string homedir = getenv("HOMEPATH");
+    std::string path = homedir + "\\" + DEFAULT_FILENAME;
 #else
     struct passwd *pw = getpwuid(getuid());
 
@@ -52,8 +52,8 @@ const string get_store_path(bool temp)
         return "";
     }
 
-    string homedir = string(pw->pw_dir);
-    string path = homedir + "/" + DEFAULT_FILENAME;
+    std::string homedir = std::string(pw->pw_dir);
+    std::string path = homedir + "/" + DEFAULT_FILENAME;
 #endif // _WIN_32
     if (temp) {
         path += ".tmp";
@@ -71,7 +71,7 @@ const string get_store_path(bool temp)
  */
 static int get_pass_store_if(ifstream &fp)
 {
-    const string path = get_store_path(false);
+    const std::string path = get_store_path(false);
 
     if (path.empty()) {
         return -1;
@@ -96,9 +96,9 @@ static int get_pass_store_if(ifstream &fp)
  * Return -1 if invalid path.
  * Return -2 if file cannot be opened.
  */
-static int get_pass_store_of(ofstream &fp, bool temp)
+static int get_pass_store_of(std::ofstream &fp, bool temp)
 {
-    const string path = get_store_path(temp);
+    const std::string path = get_store_path(temp);
 
     if (path.empty()) {
         return -1;
@@ -119,7 +119,7 @@ static int get_pass_store_of(ofstream &fp, bool temp)
  * Return 0 on success.
  * Return -1 on write fail or if file stream is not at the beginning of the file.
  */
-static int write_header(ofstream &fp, const unsigned char *hash, const unsigned char *salt)
+static int write_header(std::ofstream &fp, const unsigned char *hash, const unsigned char *salt)
 {
     if (fp.tellp() != 0) {
         return -1;
@@ -173,7 +173,7 @@ static int read_header(ifstream &fp, unsigned char *format_version, unsigned cha
  */
 int save_password_store(Pass_Store &p)
 {
-    ofstream fp;
+    std::ofstream fp;
     get_pass_store_of(fp, true);
 
     unsigned char salt[CRYPTO_SALT_SIZE];
@@ -193,8 +193,8 @@ int save_password_store(Pass_Store &p)
 
     fp.close();
 
-    string temp_path = get_store_path(true);
-    string real_path = get_store_path(false);
+    std::string temp_path = get_store_path(true);
+    std::string real_path = get_store_path(false);
 
     if (temp_path.empty() || real_path.empty()) {
         return -1;
@@ -206,7 +206,7 @@ int save_password_store(Pass_Store &p)
             return -3;
         }
 
-        string tmp = real_path + ".tmp.1";
+        std::string tmp = real_path + ".tmp.1";
 
         if (rename(real_path.c_str(), tmp.c_str()) != 0) {
             remove_file(temp_path);
@@ -214,7 +214,7 @@ int save_password_store(Pass_Store &p)
         }
 
         if (rename(temp_path.c_str(), real_path.c_str()) != 0) {
-            cerr << "rename() failed in save_password_store() with errno code: " << to_string(errno) << endl;
+            cerr << "rename() failed in save_password_store() with errno code: " << std::to_string(errno) << endl;
 
             // If we get here we're in trouble. The best we can do is attempt
             // to fall back to original file and clean everything up.
@@ -240,7 +240,7 @@ int save_password_store(Pass_Store &p)
  * Return 0 on success.
  * Return -1 on failure.
  */
-static int get_hash_params(const string &hash, Hash_Parameters *params)
+static int get_hash_params(const std::string &hash, Hash_Parameters *params)
 {
     auto tokens = string_split(hash, "$");
 
@@ -257,10 +257,10 @@ static int get_hash_params(const string &hash, Hash_Parameters *params)
             auto p = string_split(tok, ",");
 
             try {  // If we got to this point the hash should be valid, but just in case
-                string m_tok = p.at(0);
-                string t_tok = p.at(1);
-                string m_val = m_tok.substr(2, m_tok.length());
-                string t_val = t_tok.substr(2, t_tok.length());
+                std::string m_tok = p.at(0);
+                std::string t_tok = p.at(1);
+                std::string m_val = m_tok.substr(2, m_tok.length());
+                std::string t_val = t_tok.substr(2, t_tok.length());
                 params->memory_limit = stoull(m_val) * 1024U;
                 params->ops_limit = stoull(t_val);
             } catch (const exception &e) {
@@ -317,7 +317,7 @@ int load_password_store(Pass_Store &p, const unsigned char *password, size_t len
     Hash_Parameters params;
     memset(&params, 0, sizeof(params));
 
-    if (get_hash_params(string((char *) hash), &params) != 0) {
+    if (get_hash_params(std::string((char *) hash), &params) != 0) {
         cerr << "Failed to parse hash parameters" << endl;
         return -4;
     }
@@ -338,7 +338,7 @@ int load_password_store(Pass_Store &p, const unsigned char *password, size_t len
 
     crypto_memwipe(encryption_key, sizeof(encryption_key));
 
-    const string path = get_store_path(false);
+    const std::string path = get_store_path(false);
     off_t file_length = file_size(path.c_str());
 
     if (file_length < PASS_STORE_HEADER_SIZE) {
@@ -407,7 +407,7 @@ int init_pass_hash(const unsigned char *password, size_t length)
     unsigned char salt[CRYPTO_SALT_SIZE];
     crypto_gen_salt(salt, CRYPTO_SALT_SIZE);
 
-    ofstream fp;
+    std::ofstream fp;
     int ret = get_pass_store_of(fp, false);
 
     if (ret != 0) {
@@ -447,7 +447,7 @@ int update_crypto(Pass_Store &p, const unsigned char *password, size_t length)
     Hash_Parameters params;
     memset(&params, 0, sizeof(params));
 
-    if (get_hash_params(string((char *) hash), &params) != 0) {
+    if (get_hash_params(std::string((char *) hash), &params) != 0) {
         cerr << "Failed to parse hash parameters" << endl;
         return -1;
     }

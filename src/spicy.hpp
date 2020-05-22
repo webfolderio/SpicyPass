@@ -41,8 +41,6 @@
 #include "util.hpp"
 #include "crypto.hpp"
 
-using namespace std;
-
 /* The maximum number of characters for a pass store entry key/login */
 #define MAX_STORE_KEY_SIZE        (256)
 
@@ -81,14 +79,14 @@ struct Password {
 
 class Pass_Store {
 private:
-    map<string, struct Password *> store;
+    std::map<std::string, struct Password *> store;
 
     unsigned char encryption_key[CRYPTO_KEY_SIZE];
     unsigned char key_salt[CRYPTO_SALT_SIZE];
     unsigned char password_hash[CRYPTO_HASH_SIZE];
 
     /* This mutex is responsible for protecting all variables and data stored within the Pass_Store instance. */
-    mutex store_m;
+    std::mutex store_m;
 
     bool gui_enabled = false;
     bool idle_lock = false;
@@ -98,7 +96,7 @@ private:
     /*
      * Returns a string containing a key value entry in file format.
      */
-    string format_entry(string key, const char *value) {
+    std::string format_entry(std::string key, const char *value) {
         return key + DELIMITER + value + '\n';
     }
 
@@ -111,7 +109,7 @@ private:
         s_lock();
 
         for (const auto &[key, value]: store) {
-            string entry = format_entry(key, value->password);
+            std::string entry = format_entry(key, value->password);
             size += entry.length();
         }
 
@@ -134,7 +132,7 @@ private:
         s_lock();
 
         for (const auto &[key, value]: store) {
-            string entry = format_entry(key, value->password);
+            std::string entry = format_entry(key, value->password);
             memcpy(buf + pos, entry.c_str(), entry.length());
             pos += entry.length();
         }
@@ -157,15 +155,15 @@ private:
         char *t = strtok_r((char *) buf, "\n", &s);
 
         while (t) {
-            string entry = t;
+            std::string entry = t;
             auto d = entry.find(delimiter);
 
-            if (d != string::npos) {
-                string key = entry.substr(0, d);
-                string pass = entry.substr(d + 1, entry.length());
+            if (d != std::string::npos) {
+                std::string key = entry.substr(0, d);
+                std::string pass = entry.substr(d + 1, entry.length());
 
                 if (insert(key, pass) != 0) {
-                    cerr << "Warning: Failed to load entry with key `" << key << "`" << endl;
+                    std::cerr << "Warning: Failed to load entry with key `" << key << "`" << std::endl;
                     continue;
                 }
 
@@ -185,7 +183,7 @@ private:
      *
      * Return false if key was not found.
      */
-    bool delete_entry(string key)
+    bool delete_entry(std::string key)
     {
         s_lock();
 
@@ -303,7 +301,7 @@ public:
 
         if (!get_gui_status()) {
             clear_console();
-            cout << "Idle lock has been activated. Press enter to unlock." << endl;
+            std::cout << "Idle lock has been activated. Press enter to unlock." << std::endl;
         }
 
         clear();
@@ -317,7 +315,7 @@ public:
      * Return -1 on failure.
      * Return PASS_STORE_LOCKED if pass store is locked.
      */
-    int insert(string key, string value) {
+    int insert(std::string key, std::string value) {
         if (check_lock()) {
             return PASS_STORE_LOCKED;
         }
@@ -350,10 +348,10 @@ public:
 
         try {
             store.insert( {key, pass} );
-        } catch (const exception &e) {
+        } catch (const std::exception &e) {
             free(pass);
             s_unlock();
-            cerr << "Caught exception in insert(): " << e.what() << endl;
+            std::cerr << "Caught exception in insert(): " << e.what() << std::endl;
             return -1;
         }
 
@@ -369,7 +367,7 @@ public:
      * Return -1 if key does not exist.
      * Return PASS_STORE_LOCKED if pass store is locked.
      */
-    int remove(string key) {
+    int remove(std::string key) {
         if (check_lock()) {
             return PASS_STORE_LOCKED;
         }
@@ -389,7 +387,7 @@ public:
      * Return -2 if insert() fails.
      * Return PASS_STORE_LOCKED if pass store is locked.
      */
-    int replace(string old_key, string new_key, string value)
+    int replace(std::string old_key, std::string new_key, std::string value)
     {
         if (check_lock()) {
             return PASS_STORE_LOCKED;
@@ -426,7 +424,7 @@ public:
      * Return 0 if key does not exist.
      * Return PASS_STORE_LOCKED if pass store is locked.
      */
-    int key_exists(string key) {
+    int key_exists(std::string key) {
         if (check_lock()) {
             return PASS_STORE_LOCKED;
         }
@@ -449,7 +447,7 @@ public:
      * Return 0 on succsess.
      * Return PASS_STORE_LOCKED if pass store is locked.
      */
-    int get_matches(string search_key, vector<tuple<string, const char *>> &result, bool exact) {
+    int get_matches(std::string search_key, std::vector<std::tuple<std::string, const char *>> &result, bool exact) {
         if (check_lock()) {
             return PASS_STORE_LOCKED;
         }
@@ -534,7 +532,7 @@ public:
      * Return -2 on decryption error.
      * Return PASS_STORE_LOCKED if pass store is locked.
      */
-    int load(ifstream &fp, size_t length, unsigned char format_version) {
+    int load(std::ifstream &fp, size_t length, unsigned char format_version) {
         if (check_lock()) {
             return PASS_STORE_LOCKED;
         }
@@ -555,15 +553,15 @@ public:
 
             switch (ret) {
                 case -1: {
-                    cerr << "Decryption failed: Out of memory" << endl;
+                    std::cerr << "Decryption failed: Out of memory" << std::endl;
                     return -2;
                 }
                 case -2: {
-                    cerr << "Decryption failed: Corrupt file or bad key" << endl;
+                    std::cerr << "Decryption failed: Corrupt file or bad key" << std::endl;
                     return -2;
                 }
                 case -3: {
-                    cerr << "Decryption failed: File corrupt" << endl;
+                    std::cerr << "Decryption failed: File corrupt" << std::endl;
                     return -2;
                 }
                 default: {
@@ -590,7 +588,7 @@ public:
      * Return -2 if encryption fails.
      * Return PASS_STORE_LOCKED if pass store is locked.
      */
-    int save(ofstream &fp) {
+    int save(std::ofstream &fp) {
         if (check_lock()) {
             return PASS_STORE_LOCKED;
         }
