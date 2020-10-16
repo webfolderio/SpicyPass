@@ -1,9 +1,9 @@
 if not exist "c:\gtk-build" (
   mkdir C:\gtk-build\gtk\Win32
   if not exist "gtk3.24.17-vs15-x86.tar.gz" (
-    curl -L "https://github.com/webfolderio/gtk-windows/releases/download/3.24.17/gtk3.24.17-vs15-x86.tar.gz" --output gtk3.24.17-vs15-x86.tar.gz
+    curl -L "https://github.com/webfolderio/gtk-windows/releases/download/3.24.17.0/gtk3.24.17.0-vs15-x86.tar.gz" --output gtk3.24.17.0-vs15-x86.tar.gz
   )
-  tar -xzf gtk3.24.17-vs15-x86.tar.gz -C "C:\gtk-build\gtk\Win32"
+  tar -xzf gtk3.24.17.0-vs15-x86.tar.gz -C "C:\gtk-build\gtk\Win32"
 )
 
 vcpkg install libsodium:x86-windows
