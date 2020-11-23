@@ -1,0 +1,17 @@
+environment:
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      VS_VER: "15"
+      PLATFORM: "x86"
+
+build_script:
+  - build.bat
+  - tar -czf SpicyPass.tar.gz dist\gui
+
+artifacts:
+  - path: SpicyPass.tar.gz
+    name: SpicyPass GUI
+  - path: dist\console\spicypass.exe
+    name: SpicyPass Console
+
+test: off
