@@ -249,7 +249,7 @@ static void on_addEntryButtonOk(GtkButton *button, gpointer data)
         goto on_exit;
     }
 
-    exists = p->key_exists(string(loginText));
+    exists = p->key_exists(std::string(loginText));
 
     if (exists == PASS_STORE_LOCKED) {
         if (password_prompt(cb_data) != 0) {
@@ -265,7 +265,7 @@ static void on_addEntryButtonOk(GtkButton *button, gpointer data)
         goto on_exit;
     }
 
-    if (p->insert(string(loginText), string(passText)) != 0) {
+    if (p->insert(std::string(loginText), std::string(passText)) != 0) {
         snprintf(msg, sizeof(msg), "Failed to add entry");
         goto on_exit;
     }
@@ -324,7 +324,7 @@ static void on_buttonAdd_clicked(GtkButton *button, gpointer data)
     g_signal_connect(loginEntry, "activate", G_CALLBACK(on_key_enter), okButton);
     g_signal_connect(passEntry, "activate", G_CALLBACK(on_key_enter), okButton);
 
-    string password = random_password(16U);
+    std::string password = random_password(16U);
 
     if (!password.empty()) {
         gtk_entry_set_text(passEntry, password.c_str());
@@ -392,16 +392,16 @@ static void on_editEntryButtonOk(GtkButton *button, gpointer data)
     gtk_tree_model_get(model, &iter, KEY_COLUMN, &old_key, -1);
 
     if (passlen == 0) {
-        string randPass = random_password(16U);
+        std::string randPass = random_password(16U);
 
         if (randPass.empty()) {
             snprintf(msg, sizeof(msg), "Failed to generate random password");
             goto on_exit;
         }
 
-        ret = p->replace(string(old_key), string(loginText), randPass);
+        ret = p->replace(std::string(old_key), std::string(loginText), randPass);
     } else {
-        ret = p->replace(string(old_key), string(loginText), string(passText));
+        ret = p->replace(std::string(old_key), std::string(loginText), std::string(passText));
     }
 
     g_free(old_key);
@@ -488,8 +488,8 @@ static void on_buttonEdit_clicked(GtkButton *button, gpointer data)
     const gchar *loginText;
     const gchar *passwordText;
     int matches = 0;
-    vector<tuple<string, const char *>> result;
-    tuple<string, const char *> v_item;
+    std::vector<std::tuple<std::string, const char *>> result;
+    std::tuple<std::string, const char *> v_item;
     GtkTreeIter iter;
 
     if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
@@ -516,10 +516,10 @@ static void on_buttonEdit_clicked(GtkButton *button, gpointer data)
     }
 
     v_item = result.at(0);
-    loginText = get<0>(v_item).c_str();
+    loginText = std::get<0>(v_item).c_str();
 
     p->s_lock();
-    passwordText = get<1>(v_item);
+    passwordText = std::get<1>(v_item);
     gtk_entry_set_text(passEntry, passwordText);
     p->s_unlock();
 
@@ -562,7 +562,7 @@ static void on_deleteEntryButtonYes(GtkButton *button, gpointer data)
 
     gtk_tree_model_get(model, &iter, KEY_COLUMN, &key, -1);
 
-    removed = p->remove(string(key));
+    removed = p->remove(std::string(key));
 
     if (removed == PASS_STORE_LOCKED) {
         if (password_prompt(cb_data) != 0) {
@@ -700,11 +700,11 @@ static void on_buttonCopy_clicked(GtkButton *button, gpointer data)
     }
 
     GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    tuple<string, const char *> v_item = result.at(0);
+    std::tuple<std::string, const char *> v_item = result.at(0);
 
     p->s_lock();
 
-    const gchar *password = get<1>(v_item);
+    const gchar *password = std::get<1>(v_item);
     gtk_clipboard_set_text(clipboard, password, -1);
 
     p->s_unlock();
@@ -888,15 +888,15 @@ static void on_menuPassGenGenerate_clicked(GtkButton *button, gpointer data)
     bool has_err = true;
     char msg[128];
     snprintf(msg, sizeof(msg), "Length must be a value between %d and %d", NUM_RAND_PASS_MIN_CHARS, NUM_RAND_PASS_MAX_CHARS);
-    string password;
+    std::string password;
 
     if (text_length > RAND_PASS_ENTRY_MAX_LENGTH || text_length < 1) {
         goto on_exit;
     }
 
     try {
-        length = stoi(length_text);
-    } catch (const exception &e) {
+        length = std::stoi(length_text);
+    } catch (const std::exception &e) {
         goto on_exit;
     }
 
@@ -1345,7 +1345,7 @@ void GUI::run(Pass_Store &p)
     app = gtk_application_new("spicy.pass", (GApplicationFlags) 0);
 
     if (!g_application_register (G_APPLICATION(app), NULL, NULL)) {
-        cerr << "Failed to register GApplication" << endl;
+        std::cerr << "Failed to register GApplication" << std::endl;
         return;
     }
 
@@ -1359,11 +1359,11 @@ void GUI::run(Pass_Store &p)
 
     if (first_time_run()) {
         if (load_new(p, builder) != 0) {
-            cerr << "load_new() failed in GUI::run()" << endl;
+            std::cerr << "load_new() failed in GUI::run()" << std::endl;
             return;
         }
     } else if (load(&cb_data) != 0) {
-        cerr << "load failed in GUI::run()" << endl;
+        std::cerr << "load failed in GUI::run()" << std::endl;
         return;
     }
 

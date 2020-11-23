@@ -8,3 +8,7 @@ x32/*
 *~
 _build/*
 .gitattributes
+/build-console
+/build-gui
+/dist
+/gtk3.24.17-vs15-x86.tar.gz

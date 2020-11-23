@@ -15,6 +15,7 @@ cmake ^
  -DCMAKE_BUILD_TYPE=Release ^
  -DLIBSODIUM_INCLUDE_DIRS="%VCPKG_ROOT%\installed\x86-windows-static\include" ^
  -DLIBSODIUM_LIBRARIES="%VCPKG_ROOT%\installed\x86-windows-static\lib\libsodium.lib" ^
+ -A Win32 ^
  ..
 cmake --build . --target spicypass --config Release
 cd ..
@@ -32,6 +33,7 @@ cmake ^
  -DGTK_INCLUDE_DIRS="%GTK_INCLUDE%\gtk-3.0;%GLIB_CONF%;%GTK_INCLUDE%\glib-2.0;%GTK_INCLUDE%\pango-1.0;%GTK_INCLUDE%\harfbuzz;%GTK_INCLUDE%\cairo;%GTK_INCLUDE%\gdk-pixbuf-2.0;%GTK_INCLUDE%\atk-1.0" ^
  -DLIBSODIUM_LIBRARIES="%VCPKG_ROOT%\installed\x86-windows\lib\libsodium.lib" ^
  -DGTK_LIBRARIES="%GTK_LIB%\gtk-3.0.lib;%GTK_LIB%\gobject-2.0.lib;%GTK_LIB%\glib-2.0.lib;%GTK_LIB%\gdk-3.0.lib;%GTK_LIB%\gdk_pixbuf-2.0.lib" ^
+ -A Win32 ^
  ..
 cmake --build . --target spicypass --config Release
 cd ..
